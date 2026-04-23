@@ -8,7 +8,7 @@ const attemptCount = document.getElementById("attempt-count");
 
 const MIN_NUMBER = 1;
 const MAX_NUMBER = 100;
-const MAX_ATTEMPTS = 100;
+const MAX_ATTEMPTS = 20;
 
 let secretNumber = 0;
 let attempts = 0;
