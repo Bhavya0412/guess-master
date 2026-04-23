@@ -1,121 +1,155 @@
-const guessForm = document.getElementById("guess-form");
-const guessInput = document.getElementById("guess-input");
-const submitButton = document.getElementById("submit-button");
-const restartButton = document.getElementById("restart-button");
-const feedbackMessage = document.getElementById("feedback-message");
-const errorMessage = document.getElementById("error-message");
-const attemptCount = document.getElementById("attempt-count");
+// ==================
+// GAME SETUP
+// ==================
 
-const MIN_NUMBER = 1;
-const MAX_NUMBER = 100;
-const MAX_ATTEMPTS = 20;
-
-let secretNumber = 0;
+let randomNumber = generateNumber();
 let attempts = 0;
-let gameOver = false;
+let maxAttempts = 10;
+let soundOn = true;
 
-function createSecretNumber() {
-  return Math.floor(Math.random() * MAX_NUMBER) + MIN_NUMBER;
+function generateNumber() {
+  return Math.floor(Math.random() * 100) + 1;
 }
 
-function updateAttempts() {
-  attemptCount.textContent = `${attempts} / ${MAX_ATTEMPTS}`;
+// ==================
+// SOUND SYSTEM
+// ==================
+
+function playSound(id) {
+  if (!soundOn) return;
+
+  const sound = document.getElementById(id);
+  if (!sound) return;
+
+  sound.currentTime = 0;
+  sound.play().catch(() => { }); // prevents browser autoplay errors
 }
 
-function setFeedback(message, type = "default") {
-  feedbackMessage.textContent = message;
-  feedbackMessage.className = `message feedback${type === "default" ? "" : ` ${type}`}`;
+// ==================
+// GAME LOGIC
+// ==================
+
+function checkGuess() {
+  const input = document.getElementById("guessInput");
+  const result = document.getElementById("result");
+  const container = document.querySelector(".container");
+
+  const guess = Number(input.value);
+
+  // ❌ validation
+  if (!guess || guess < 1 || guess > 100) {
+    result.innerText = "⚠️ Enter a number between 1-100";
+    return;
+  }
+
+  attempts++;
+
+  if (guess === randomNumber) {
+    result.innerText = `🎉 You Win in ${attempts} attempts!`;
+    container.classList.add("win");
+    playSound("winSound");
+    disableGame();
+  }
+  else if (attempts >= maxAttempts) {
+    result.innerText = `💀 You Lost! Number was ${randomNumber}`;
+    playSound("loseSound");
+    flashScreen();
+    disableGame();
+  }
+  else {
+    result.innerText = guess > randomNumber
+      ? "📉 Too High!"
+      : "📈 Too Low!";
+    playSound("loseSound");
+    flashScreen();
+  }
+
+  input.value = "";
 }
 
-function setError(message = "") {
-  errorMessage.textContent = message;
-}
+// ==================
+// GAME CONTROL
+// ==================
 
 function disableGame() {
-  gameOver = true;
-  guessInput.disabled = true;
-  submitButton.disabled = true;
-}
-
-function enableGame() {
-  gameOver = false;
-  guessInput.disabled = false;
-  submitButton.disabled = false;
+  document.getElementById("guessInput").disabled = true;
 }
 
 function resetGame() {
-  secretNumber = createSecretNumber();
+  randomNumber = generateNumber();
   attempts = 0;
-  enableGame();
-  guessForm.reset();
-  updateAttempts();
-  setError();
-  setFeedback("Make your first guess.");
-  guessInput.focus();
+
+  document.getElementById("guessInput").disabled = false;
+  document.getElementById("result").innerText = "";
+  document.querySelector(".container").classList.remove("win");
 }
 
-function validateGuess(value) {
-  if (value.trim() === "") {
-    return "Please enter a number.";
-  }
+// ==================
+// VISUAL EFFECTS
+// ==================
 
-  const guess = Number(value);
-
-  if (!Number.isInteger(guess)) {
-    return "Enter a whole number only.";
-  }
-
-  if (guess < MIN_NUMBER || guess > MAX_NUMBER) {
-    return "Guess must be between 1 and 100.";
-  }
-
-  return "";
+function flashScreen() {
+  document.body.style.background = "#7f1d1d";
+  setTimeout(() => {
+    document.body.style.background = "#020617";
+  }, 150);
 }
 
-guessForm.addEventListener("submit", function (event) {
-  event.preventDefault();
+// ==================
+// BACKGROUND ANIMATION
+// ==================
 
-  if (gameOver) {
-    return;
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
+
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  initParticles();
+}
+
+window.addEventListener("resize", resizeCanvas);
+
+function initParticles() {
+  particles = [];
+
+  for (let i = 0; i < 100; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2,
+      dx: Math.random() - 0.5,
+      dy: Math.random() - 0.5
+    });
   }
+}
 
-  const rawGuess = guessInput.value;
-  const validationMessage = validateGuess(rawGuess);
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (validationMessage) {
-    setError(validationMessage);
-    setFeedback("Waiting for a valid guess.", "limit");
-    return;
-  }
+  ctx.fillStyle = "#3b82f6";
 
-  setError();
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
 
-  const guess = Number(rawGuess);
-  attempts += 1;
-  updateAttempts();
+    p.x += p.dx;
+    p.y += p.dy;
 
-  if (guess === secretNumber) {
-    setFeedback("Correct", "correct");
-    disableGame();
-    return;
-  }
+    // bounce edges
+    if (p.x <= 0 || p.x >= canvas.width) p.dx *= -1;
+    if (p.y <= 0 || p.y >= canvas.height) p.dy *= -1;
+  });
 
-  if (attempts >= MAX_ATTEMPTS) {
-    setFeedback(`No attempts left. The number was ${secretNumber}.`, "limit");
-    disableGame();
-    return;
-  }
+  requestAnimationFrame(animate);
+}
 
-  if (guess > secretNumber) {
-    setFeedback("Lower");
-  } else {
-    setFeedback("Higher");
-  }
+// ==================
+// INIT
+// ==================
 
-  guessForm.reset();
-  guessInput.focus();
-});
-
-restartButton.addEventListener("click", resetGame);
-
-resetGame();
+resizeCanvas();
+animate();

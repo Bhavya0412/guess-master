@@ -1,57 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Number Guessing Game</title>
-    <style>
-      __GAME_CSS__
-    </style>
-  </head>
-  <body>
-    <main class="game-shell">
-      <section class="game-card" aria-labelledby="game-title">
-        <div class="game-card__glow" aria-hidden="true"></div>
-        <p class="eyebrow">Challenge</p>
-        <h1 id="game-title">Number Guessing Game</h1>
-        <p class="subtitle">Guess the secret number between 1 and 100.</p>
+<head>
+  <meta charset="UTF-8">
+  <title>Guess Master</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-        <form id="guess-form" class="guess-form" novalidate>
-          <label class="field-label" for="guess-input">Your guess</label>
-          <div class="input-row">
-            <input
-              id="guess-input"
-              name="guess"
-              type="number"
-              inputmode="numeric"
-              min="1"
-              max="100"
-              placeholder="Enter 1–100"
-              autocomplete="off"
-              required
-            />
-            <button type="submit" id="submit-button">Submit</button>
-          </div>
-          <p id="error-message" class="message error" role="alert" aria-live="polite"></p>
-        </form>
+  <!-- Animated Background -->
+  <canvas id="bgCanvas"></canvas>
 
-        <div class="status-panel" aria-live="polite">
-          <div>
-            <span class="status-label">Feedback</span>
-            <p id="feedback-message" class="message feedback">Make your first guess.</p>
-          </div>
-          <div>
-            <span class="status-label">Attempts</span>
-            <p id="attempt-count" class="attempt-count">0 / 100</p>
-          </div>
-        </div>
+  <div class="container">
+    <h1>Guess The Number</h1>
+    <input type="number" id="guessInput" placeholder="Enter number">
+    <button onclick="checkGuess()">Submit</button>
+    <p id="result"></p>
+  </div>
 
-        <button type="button" id="restart-button" class="restart-button">Restart Game</button>
-      </section>
-    </main>
+  <!-- Sound Effects -->
+  <audio id="winSound" src="win.mp3"></audio>
+  <audio id="loseSound" src="lose.mp3"></audio>
 
-    <script>
-      __GAME_JS__
-    </script>
-  </body>
+  <script src="script.js"></script>
+</body>
 </html>
